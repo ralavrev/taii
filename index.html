@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tailandia 2026 — Guía del Viaje</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+/* CONFIGURACIÓN Y PALETA VERANO TROPICAL */
+*{margin:0;padding:0;box-sizing:border-box}
+:root {
+  --coral: #E76F51;
+  --warm-orange: #F4A261;
+  --sand-bg: #FDF6E3;
+  --ocean-blue: #1D3557;
+  --turquoise: #2A9D8F;
+  --aqua: #A8DADC;
+  --charcoal: #264653;
+  --card-white: #FFFFFF;
+  --border-light: rgba(42, 157, 143, 0.15);
+}
+html { scroll-behavior: smooth; font-family: 'Poppins', sans-serif; background-color: var(--sand-bg); color: var(--charcoal); }
+body { overflow-x: hidden; }
+
+/* FONDOS DINÁMICOS POR SCROLL */
+#dynamic-story-bg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(4px) brightness(0.65) saturate(1.1);
+  transition: background-image 0.8s ease-in-out;
+  z-index: -2;
+  transform: scale(1.02);
+  background-color: var(--sand-bg);
+}
+#story-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(253, 246, 227, 0.1) 0%, rgba(253, 246, 227, 0.4) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* NAVBAR TROPICAL */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 1.2rem 2rem;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: rgba(253, 246, 227, 0.85);
+  border-bottom: 1px solid var(--border-light);
+}
+.brand { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--ocean-blue); }
+.brand span { color: var(--coral); }
+.nav-menu { display: flex; gap: 1.8rem; }
+.nav-menu a { color: var(--charcoal); text-decoration: none; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; transition: color 0.3s; }
+.nav-menu a:hover { color: var(--coral); }
+
+/* SECCIONES */
+section { min-height: 100vh; padding: 6.5rem 1.5rem 4rem; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.container { max-width: 1140px; width: 100%; margin: 0 auto; }
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.reveal.active { opacity: 1; transform: translateY(0); }
+
+/* HERO */
+.hero-content { text-align: center; max-width: 800px; }
+.hero-eyebrow { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.8rem; color: var(--coral); margin-bottom: 0.5rem; }
+.hero-title { font-family: 'Playfair Display', serif; font-size: clamp(3.5rem, 9vw, 7.5rem); font-weight: 800; line-height: 0.95; color: var(--ocean-blue); margin-bottom: 1.5rem; }
+.hero-title span { background: linear-gradient(90deg, var(--turquoise), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: 1.05rem; color: var(--charcoal); line-height: 1.7; margin-bottom: 2.5rem; }
+
+.countdown-grid { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
+.cd-block { background: #fff; border: 1px solid var(--border-light); padding: 0.8rem 1.4rem; border-radius: 16px; min-width: 90px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
+.cd-time { display: block; font-size: 2.2rem; font-weight: 700; color: var(--ocean-blue); line-height: 1; }
+.cd-desc { font-size: 0.65rem; text-transform: uppercase; color: var(--charcoal); opacity: 0.7; font-weight: 600; margin-top: 0.2rem; }
+
+/* BOTONES DE SALTO RÁPIDO */
+.quick-jump-zone { display: flex; justify-content: center; gap: 1rem; margin: 1rem 0 2rem; flex-wrap: wrap; }
+.jump-link { background: #fff; border: 1px solid var(--border-light); padding: 0.6rem 1.2rem; border-radius: 50px; color: var(--ocean-blue); text-decoration: none; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.3s; }
+.jump-link:hover { background: var(--turquoise); color: #fff; transform: translateY(-2px); }
+
+/* MAPA */
+#map { height: 440px; width: 100%; border-radius: 24px; border: 2px solid #fff; box-shadow: 0 15px 40px rgba(0,0,0,0.06); z-index: 1; }
+.section-meta { text-align: center; margin-bottom: 3.5rem; }
+.section-meta h2 { font-family: 'Playfair Display', serif; font-size: clamp(2.3rem, 5vw, 3.5rem); color: var(--ocean-blue); }
+.section-meta p { color: var(--coral); font-size: 0.85rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 0.4rem; font-weight: 600; }
+
+/* TIMELINE TRACKER LINE */
+.itinerary-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; gap: 4.5rem; }
+.itinerary-wrapper::before { content: ''; position: absolute; left: 35px; top: 20px; bottom: 20px; width: 4px; background: rgba(42, 157, 143, 0.15); z-index: 0; }
+.timeline-progress { position: absolute; left: 35px; top: 20px; width: 4px; height: 0%; background: linear-gradient(to bottom, var(--turquoise), var(--coral)); z-index: 1; transition: height 0.1s ease-out; }
+
+/* DISPOSICIÓN DÍA A DÍA (DASHBOARD) */
+.day-layout { display: grid; grid-template-columns: 280px 1fr; gap: 2.5rem; width: 100%; position: relative; z-index: 2; }
+@media (max-width: 900px) { .day-layout { grid-template-columns: 1fr; gap: 1.5rem; } .itinerary-wrapper::before, .timeline-progress { display: none; } }
+
+.day-sticky-panel { background: var(--card-white); border: 1px solid rgba(0,0,0,0.05); padding: 2.5rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.03); height: fit-content; position: sticky; top: 90px; }
+@media (max-width: 900px) { .day-sticky-panel { position: relative; top: 0; padding: 1.5rem; } }
+
+.day-timeline-node { position: absolute; left: -29px; top: 40px; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 4px solid rgba(42, 157, 143, 0.3); z-index: 10; transition: all 0.4s ease; }
+.day-layout.active-day .day-timeline-node { background: var(--turquoise); border-color: #fff; box-shadow: 0 0 12px var(--turquoise); transform: scale(1.2); }
+
+.day-num { font-family: 'Playfair Display', serif; font-size: 5rem; font-weight: 800; color: var(--coral); line-height: 0.9; }
+.day-title { font-size: 1.4rem; font-weight: 700; color: var(--ocean-blue); margin: 0.4rem 0; }
+.day-date { font-size: 0.8rem; color: var(--turquoise); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.hotel-pill-badge { display: inline-block; margin-top: 1.5rem; padding: 0.5rem 1rem; background: #fff; border: 1px solid var(--border-light); border-radius: 12px; font-size: 0.78rem; color: var(--charcoal); text-decoration: none; font-weight: 600; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+.hotel-pill-badge:hover { background: var(--ocean-blue); color: #fff; transform: translateY(-2px); }
+
+/* GRID DE TARJETAS SOLIDAS */
+.day-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 1.5rem; }
+@media (max-width: 600px) { .day-info-grid { grid-template-columns: 1fr; } }
+
+.info-card { background: var(--card-white); border: 1px solid rgba(0,0,0,0.05); padding: 2.2rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 0.8rem; position: relative; }
+.info-card.full-width { grid-column: 1 / -1; border-left: 5px solid var(--turquoise); }
+
+.weather-tag { position: absolute; top: 1.8rem; right: 2rem; font-size: 1.3rem; opacity: 0.8; }
+.info-card h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ocean-blue); font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+.info-card p { font-size: 0.95rem; line-height: 1.6; color: var(--charcoal); }
+
+/* STICKERS LOGÍSTICOS */
+.sticker-container { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.2rem; }
+.sticker { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 6px; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.3rem; }
+.sticker.orange { background: rgba(244, 162, 97, 0.15); color: #b25e1a; }
+.sticker.teal { background: rgba(42, 157, 143, 0.15); color: #16645a; }
+.sticker.coral { background: rgba(231, 111, 81, 0.15); color: #a03c23; }
+
+.clean-bullets { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+.clean-bullets li { font-size: 0.95rem; line-height: 1.5; color: var(--charcoal); position: relative; padding-left: 1.4rem; }
+.clean-bullets li::before { content: "•"; color: var(--turquoise); font-size: 1.4rem; position: absolute; left: 0; top: -3px; }
+
+/* CAJA DESTACADA DE SECRETOS */
+.secret-highlight-box { background: linear-gradient(135deg, rgba(244,162,97,0.08) 0%, rgba(231,111,81,0.05) 100%); border-left: 4px solid var(--warm-orange); padding: 1.2rem; border-radius: 0 16px 16px 0; margin-top: auto; }
+.secret-highlight-box h5 { font-size: 0.78rem; text-transform: uppercase; color: var(--charcoal); margin-bottom: 0.4rem; font-weight: 700; display: flex; align-items: center; gap: 0.3rem; }
+.secret-highlight-box p { font-size: 0.88rem; line-height: 1.5; color: var(--charcoal); }
+
+.cash-flow-tag { font-size: 0.8rem; font-weight: 700; color: var(--coral); background: rgba(231,111,81,0.08); padding: 0.3rem 0.6rem; border-radius: 8px; width: fit-content; margin-bottom: 0.3rem; }
+.maps-redirect-btn { display: inline-flex; align-items: center; justify-content: center; margin-top: auto; padding: 0.5rem 1rem; background: rgba(29,53,87,0.04); border: 1px solid var(--border-light); color: var(--ocean-blue); border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: 0.3s; width: fit-content; }
+.maps-redirect-btn:hover { background: var(--ocean-blue); color: #fff; }
+
+.info-card.imprescindible-card { border-left: 5px solid var(--coral); background: rgba(231,111,81,0.01); }
+
+/* SECCIÓN LOGÍSTICA */
+.grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 3rem; width: 100%; }
+@media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+.luxury-box { background: var(--card-white); border: 1px solid rgba(0,0,0,0.05); padding: 2.5rem; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.03); }
+.b-row { display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px solid rgba(0,0,0,0.04); font-size: 0.92rem; }
+.b-row .amt { color: var(--coral); font-weight: 700; }
+.b-total { display: flex; justify-content: space-between; margin-top: 1.2rem; padding-top: 1.2rem; border-top: 2px solid var(--turquoise); font-size: 1.3rem; font-weight: 700; color: var(--ocean-blue); }
+.b-alert { background: rgba(231, 111, 81, 0.08); border: 1px solid rgba(231, 111, 81, 0.2); padding: 1.2rem; border-radius: 12px; margin-top: 1.2rem; text-align: left; font-size: 0.88rem; line-height: 1.5; }
+
+.tip-stack { list-style: none; display: flex; flex-direction: column; gap: 1.2rem; }
+.tip-stack li strong { color: var(--ocean-blue); display: block; margin-bottom: 0.2rem; font-size: 0.95rem; }
+.tip-stack li p { font-size: 0.9rem; color: var(--charcoal); line-height: 1.5; }
+
+/* SOS COMPONENT */
+#sos-float-btn { position: fixed; bottom: 25px; right: 25px; background: var(--coral); color: #fff; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; text-decoration: none; box-shadow: 0 8px 25px rgba(231,111,81,0.4); z-index: 9999; border: 2px solid #fff; transition: transform 0.3s; cursor: pointer; }
+#sos-float-btn:hover { transform: scale(1.08); }
+
+#sos-modal { position: fixed; inset: 0; background: rgba(4, 7, 16, 0.6); backdrop-filter: blur(10px); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+.sos-modal-content { background: #fff; color: var(--charcoal); padding: 2.5rem; border-radius: 28px; max-width: 550px; width: 100%; box-shadow: 0 25px 50px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
+.close-modal { position: absolute; top: 1.2rem; right: 1.5rem; font-size: 1.6rem; cursor: pointer; color: var(--charcoal); opacity: 0.5; }
+.sos-hotel-node { border-bottom: 1px dashed #ddd; padding: 1rem 0; }
+.sos-hotel-node:last-child { border: none; }
+.sos-hotel-node h5 { color: var(--ocean-blue); font-size: 1rem; margin-bottom: 0.3rem; }
+.sos-thai-txt { background: #fdf6e3; padding: 0.6rem; border-radius: 8px; font-size: 0.85rem; color: #b25e1a; font-weight: 500; margin-top: 0.3rem; line-height: 1.4; }
+
+footer { padding: 4rem 2rem; text-align: center; font-size: 0.85rem; color: var(--charcoal); opacity: 0.6; border-top: 1px solid rgba(0,0,0,0.04); }
+</style>
+</head>
+<body>
+
+<div id="dynamic-story-bg"></div>
+<div id="story-overlay"></div>
+
+<nav class="navbar">
+  <div class="brand">TAILANDIA<span>2026</span></div>
+  <div class="nav-menu">
+    <a href="#mapa-sec">Ruta</a>
+    <a href="#itinerario">Itinerario</a>
+    <a href="#logistica">Logística</a>
+  </div>
+</nav>
+
+<div id="sos-float-btn" onclick="document.getElementById('sos-modal').style.display='flex'">🚨 SOS</div>
+
+<div id="sos-modal" onclick="this.style.display='none'">
+  <div class="sos-modal-content" onclick="event.stopPropagation()">
+    <span class="close-modal" onclick="document.getElementById('sos-modal').style.display='none'">×</span>
+    <h3 style="font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--coral); margin-bottom:0.5rem;">Direcciones para Taxistas</h3>
+    <p style="font-size:0.85rem; color:var(--charcoal); margin-bottom:1.2rem; opacity:0.8;">Enseña esta pantalla al conductor si necesitas volver al hotel:</p>
+    
+    <div class="sos-hotel-node">
+      <h5>🏙️ Bangkok (Noches 2-4) — Zensation The Residence</h5>
+      <div class="sos-thai-txt">เซนเซชั่น เดอะ เรสซิเดนซ์: 80 ซอย นราธิวาสราชนครินทร์ 17 แขวง ทุ่งมหาเมฆ เขต สาทร กรุงเทพมหานคร</div>
+    </div>
+    <div class="sos-hotel-node">
+      <h5>🌴 Koh Phangan (Noches 5-7) — Sabaii Bay Resort</h5>
+      <div class="sos-thai-txt">สบายดี เบย์ รีสอร์ท: 100/14 หมู่ 1 บ้านท้องศาลา เกาะพะงัน สุราษฎร์ธานี</div>
+    </div>
+    <div class="sos-hotel-node">
+      <h5>🏡 Krabi (Noches 8-11) — Villa Privada Ao Nang</h5>
+      <div class="sos-thai-txt">วิลล่าส่วนตัวอ่าวนาง (แอดเดรสตามแอร์บีเอ็นบี): ซอยอ่าวนาง 11 ตำบลอ่าวนาง อำเภอเมืองกระบี่  กระบี่</div>
+    </div>
+    <div class="sos-hotel-node">
+      <h5>🏙️ Bangkok (Noche 12) — Pas Cher Hotel</h5>
+      <div class="sos-thai-txt">ปาเชอร์ โฮเทล แบงค็อก: 343 ซอย เจริญกรุง 49 แขวง สุริยวงศ์ เขต บางรัก กรุงเทพมหานคร</div>
+    </div>
+  </div>
+</div>
+
+<section id="hero">
+  <div class="container hero-content reveal">
+    <span class="hero-eyebrow">El viaje de nuestras vidas</span>
+    <h1 class="hero-title">Thailand Trip <span>2026</span></h1>
+    <p class="hero-subtitle">Mochilas listas y el grupo de 12 reunido. 13 días recorriendo Tailandia de cabo a rabo. Nos esperan los templos dorados de Bangkok, las playas salvajes de Koh Phangan y el relax total en nuestra villa privada con piscina en Krabi. Desliza hacia abajo para ver el plan detallado.</p>
+    
+    <div class="countdown-grid" id="countdown">
+      <div class="cd-block"><span class="cd-time" id="dias">00</span><span class="cd-desc">Días</span></div>
+      <div class="cd-block"><span class="cd-time" id="horas">00</span><span class="cd-desc">Horas</span></div>
+      <div class="cd-block"><span class="cd-time" id="mins">00</span><span class="cd-desc">Mins</span></div>
+      <div class="cd-block"><span class="cd-time" id="segs">00</span><span class="cd-desc">Segs</span></div>
+    </div>
+
+    <div class="quick-jump-zone">
+      <a href="#chunk-bkk" class="jump-link">🏙️ Bangkok</a>
+      <a href="#chunk-kph" class="jump-link">🌴 Koh Phangan</a>
+      <a href="#chunk-krb" class="jump-link">🌊 Krabi</a>
+    </div>
+  </div>
+</section>
+
+<section id="mapa-sec" style="padding-top: 2rem; padding-bottom: 2rem;">
+  <div class="container">
+    <div class="section-meta reveal">
+      <div id="chunk-bkk" style="position:absolute; top:-100px;"></div>
+      <h2>Mapa de Ruta</h2>
+      <p>Nuestra ruta interactiva por el sudeste asiático</p>
+    </div>
+    <div id="map" class="reveal"></div>
+  </div>
+</section>
+
+<section id="itinerario">
+  <div class="container" style="position: relative;">
+    
+    <div class="itinerary-wrapper">
+      <div class="timeline-progress" id="progress-bar"></div>
+
+      <!-- DIA 1 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">01</div>
+          <div class="day-title">Vuelo a Bangkok</div>
+          <div class="day-date">Jueves 23 de julio</div>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">✈️</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🛫 Salida 16:40h</span>
+              <span class="sticker teal">Cerrado: 650€ pp</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Punto de encuentro en el Aeropuerto de Madrid-Barajas (MAD) listos para facturar.</li>
+              <li>Despegue a las 16:40h en dirección a tierras tailandesas. ¡Afrontamos el vuelo largo nocturno!</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde comer</h4>
+            <p><strong>Menú de Vuelo / Barajas:</strong> Un picoteo rápido o cena en los restaurantes de la T4 de Madrid antes del embarque, o directamente los menús calientes servidos a bordo de la aeronave internacional.</p>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Pasaporte original con validez superior a 6 meses, auriculares tradicionales de cable para la pantalla del asiento, almohada cervical hinchable y un antifaz cómodo.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de altura</h5>
+              <p>Los aviones comerciales vuelan a unos 11.000 metros de altura en la estratosfera para evitar las corrientes del clima y ahorrar combustible debido a la menor resistencia del aire.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 2 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1583491470869-354316d997cc?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">02</div>
+          <div class="day-title">Llegada a Bangkok</div>
+          <div class="day-date">Viernes 24 de julio</div>
+          <a href="https://zensationtheresidence.com/" target="_blank" class="hotel-pill-badge">🏨 Zensation Residence</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🌦️ 33°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🛬 Llegada 13:40h</span>
+              <span class="sticker teal">Van Privada Incluida</span>
+              <span class="sticker coral">Noche 1/3 BKK</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li><strong>13:40h:</strong> Aterrizaje en Bangkok. Una furgoneta privada nos recoge directamente hacia nuestro hotel.</li>
+              <li>Check-in en <strong>Zensation The Residence</strong> (reparto en las 3 suites familiares del grupo).</li>
+              <li><strong>Tarde libre:</strong> Primeras ideas para estirar las piernas como pasear junto al río Chao Phraya con vistas a Wat Arun, visitar Asiatique, subir al MahaNakhon o cruzar Lumphini Park.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>T&K Seafood (Chinatown):</strong> El puesto callejero más mítico de Yaowarat Road. Cenamos de pie o en mesas metálicas en plena calle rodeados de neones gigantes. Espectacular marisco a la parrilla.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=T%26K+Seafood+Chinatown+Bangkok" target="_blank" class="maps-redirect-btn">Ver T&K en Google Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Dinero en efectivo (Bahts cambiaditos en el aeropuerto o ciudad) y ropa de recambio muy fresca a mano en el equipaje de cabina para quitarte el abrigo de Madrid.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de la capital</h5>
+              <p>El nombre ceremonial completo de Bangkok tiene 168 letras y es el más largo del planeta según el récord Guinness. Los tailandeses lo abrevian simplemente como "Krung Thep".</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 3 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">03</div>
+          <div class="day-title">Mercados & Templos</div>
+          <div class="day-date">Sábado 25 de julio</div>
+          <a href="https://zensationtheresidence.com/" target="_blank" class="hotel-pill-badge">🏨 Zensation Residence</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">☀️ 34°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🚐 Van Privada Pack</span>
+              <span class="sticker teal">Ruta Todo el Día</span>
+              <span class="sticker coral">Noche 2/3 BKK</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Ruta completa en furgoneta privada con chófer local para los 12 del grupo (incluido en el pack de traslados).</li>
+              <li><strong>Mercado del Tren (Mae Klong):</strong> Los puestos de comida se desmontan en segundos cuando el tren pasa rozando las cajas de fruta.</li>
+              <li><strong>Mercado Flotante (Damnoen Saduak):</strong> Paseo tradicional en barca de madera entre las tiendas flotantes de los canales (tickets incluidos).</li>
+              <li><strong>Ruinas de Ayutthaya:</strong> Tarde explorando los templos históricos de Wat Mahathat, Wat Chaiwatthanaram y Wat Phra Si Sanphet.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde comer</h4>
+            <p><strong>Prang View Cafe (Ayutthaya):</strong> Un café moderno y precioso con un aire acondicionado salvador justo enfrente de las ruinas antiguas, ideal para comer fideos locales y descansar del calor.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Prang+View+Cafe+Ayutthaya" target="_blank" class="maps-redirect-btn">Ver Prang View en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Pantalón largo fino o pareo grande y camiseta con mangas. Para entrar a las ruinas y templos históricos es obligatorio llevar hombros y rodillas cubiertos.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de Ayutthaya</h5>
+              <p>La famosa cabeza de Buda de piedra entre las raíces del árbol en Wat Mahathat se quedó en el suelo tras el saqueo del ejército birmano. El árbol creció abrazándola de forma natural.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 4 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1563492065599-3520f775eeed?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">04</div>
+          <div class="day-title">Bangkok Libre</div>
+          <div class="day-date">Domingo 26 de julio</div>
+          <a href="https://zensationtheresidence.com/" target="_blank" class="hotel-pill-badge">🏨 Zensation Residence</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🌦️ 33°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">👑 Gran Palacio Real</span>
+              <span class="sticker coral">Noche 3/3 BKK</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li><strong>Día libre en la gran ciudad:</strong> Visitamos el Gran Palacio Real y el templo del Buda de Esmeralda (Wat Phra Kaew), el más sagrado del país.</li>
+              <li>Pasamos a ver el impresionante Buda Reclinado de oro de 46 metros de longitud en el histórico templo <strong>Wat Pho</strong>.</li>
+              <li>Tarde ideal para subir las escaleras del Monte Dorado (Wat Saket) o admirar el Buda de oro macizo en Wat Traimit.</li>
+              <li>Sugerencia nocturna: Ver combates oficiales de Muay Thai en un estadio tradicional y relajar las piernas con masajes callejeros.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Thip Samai Pad Thai:</strong> El restaurante de Pad Thai más clásico e histórico de Bangkok. Si la cola es muy larga, en los callejones contiguos hay puestos brutales al wok de nivelazo.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Thip+Samai+Pad+Thai+Bangkok" target="_blank" class="maps-redirect-btn">Ver Thip Samai en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Zapatos o zapatillas que sean facilísimos de quitar y poner. Te obligarán a descalzarte cada vez que quieras acceder al interior de cualquier capilla o templo.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad del Buda de Oro</h5>
+              <p>El Buda de oro macizo de Wat Traimit estuvo cubierto por una tosca capa de yeso durante siglos para camuflarlo de los ladrones. El secreto se descubrió en 1955 al caerse accidentalmente de una grúa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 5 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div id="chunk-kph" style="position:absolute; top:-100px;"></div>
+          <div class="day-num">05</div>
+          <div class="day-title">Rumbo a la Isla</div>
+          <div class="day-date">Lunes 27 de julio</div>
+          <a href="https://sabaiibayresort.th-thailand.com/es/" target="_blank" class="hotel-pill-badge">🌴 Sabaii Bay Resort</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">☀️ 31°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">✈️ AirAsia 07:30h</span>
+              <span class="sticker teal">🚢 Ferry Combo</span>
+              <span class="sticker coral">Noche 1/3 KPH</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li><strong>07:30h:</strong> Volamos temprano con Air Asia hacia Surat Thani (llegada 08:55h, ya pagado por cada uno).</li>
+              <li><strong>11:00h - 15:00h:</strong> Nos subimos al pack de ferry rápido directo a Koh Phangan (incluye el bus al puerto, cerrado en 27,73€ pp).</li>
+              <li>Llegada e instalación en los bungalós frente al mar de <strong>Sabaii Bay Resort</strong>.</li>
+              <li>Tarde libre para recoger los coches de alquiler, relajarse en las playas (Bottle Beach, Chaloklum) o ver las cascadas de Phaeng y Wang Sai.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Phantip Market (Thong Sala):</strong> El mercado gastronómico nocturno por excelencia de la isla. Perfecto para cenar de puestos: arroz frito, brochetas satay caseras y zumos naturales gigantes.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Phantip+Market+Thong+Sala+Koh+Phangan" target="_blank" class="maps-redirect-btn">Ver Mercado en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Pastillas para el mareo (Biodramina) para el trayecto en barco si hay oleaje y tu carnet de conducir internacional original para poder retirar los coches de alquiler.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad energética</h5>
+              <p>Koh Phangan está asentada sobre una inmensa base de granito y cuarzo rosa cristalino, lo que según los geólogos y locales dota a la isla de una energía magnética única.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 6 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">06</div>
+          <div class="day-title">Parque Ang Thong</div>
+          <div class="day-date">Martes 28 de julio</div>
+          <a href="https://sabaiibayresort.th-thailand.com/es/" target="_blank" class="hotel-pill-badge">🌴 Sabaii Bay Resort</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🌊 31°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🚤 Tour de 8 Horas</span>
+              <span class="sticker teal">🍛 Almuerzo Incluido</span>
+              <span class="sticker coral">Noche 2/3 KPH</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Excursión en barco de todo el día por el parque nacional marino de 42 islas vírgenes. Desayuno incluido en el barco durante la navegación inicial.</li>
+              <li>Haremos snorkel libre rodeados de corales y peces tropicales en aguas turquesas.</li>
+              <li>Subiremos por las escaleras de roca para ver la espectacular y escondida <strong>Laguna Esmeralda</strong> en Koh Mae Ko.</li>
+              <li>Tarde de rutas en kayak de mar bordeando los acantilados y opción de trekking libre al mirador alto de Ko Wua Ta Lap.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde almorzar</h4>
+            <p><strong>Buffet a Bordo del Barco:</strong> La propia tripulación cocina a bordo un almuerzo buffet tradicional tailandés delicioso mientras el barco navega plácidamente entre los monolitos de roca.</p>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Funda impermeable estanca para proteger el móvil, toalla fina de secado rápido, escarpines para las rocas y crema solar biodegradable (para no dañar el coral).</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de Ang Thong</h5>
+              <p>Este archipiélago de islas calizas surrealistas sirvió de inspiración directa al escritor Alex Garland para crear su famosa novela de culto "La Playa".</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 7 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1516483638261-f40889f08a18?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">07</div>
+          <div class="day-title" style="color: var(--coral);">Full Moon Party</div>
+          <div class="day-date">Miércoles 29 de julio</div>
+          <a href="https://sabaiibayresort.th-thailand.com/es/" target="_blank" class="hotel-pill-badge">🌴 Sabaii Bay Resort</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🌕🎉</span>
+            <div class="sticker-container">
+              <span class="sticker coral">🔥 La Noche del Viaje</span>
+              <span class="sticker teal">🏝️ Opción Koh Tao</span>
+              <span class="sticker coral">Noche 3/3 KPH</span>
+            </div>
+            <h4>📍 Plan del día (2 Opciones)</h4>
+            <ul class="clean-bullets">
+              <li><strong>Opción de día 1:</strong> Excursión en lancha a los impresionantes arrecifes de coral de la vecina Koh Tao (Sairee Beach, Shark Bay, Tanote Bay).</li>
+              <li><strong>Opción de día 2:</strong> Descanso total de playa y siesta larga en el resort para guardar energías de cara a la noche.</li>
+              <li><strong>La noche del viaje:</strong> Nos movemos en taxi hacia la playa de Haad Rin. Nos espera la mítica <strong>Full Moon Party</strong> con malabaristas de fuego y escenarios en la arena hasta el amanecer.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Same Same Restaurant (Haad Rin):</strong> Un clásico mochilero genial en el mismo pueblo de la fiesta. Perfecto para cenar unas buenas hamburguesas o curris tailandeses y cargarse de energía antes de pisar la arena.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Same+Same+Restaurant+Haad+Rin+Koh+Phangan" target="_blank" class="maps-redirect-btn">Ver Same Same en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Reglas de Oro hoy</h4>
+            <p>Zapatillas cerradas obligatorias (nunca chanclas, la arena se llena de cristales de botellas). Deja pasaportes y tarjetas en el hotel; lleva solo efectivo seguro encima.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de la noche</h5>
+              <p>Comenzó a mediados de los 80 como una fiesta de cumpleaños íntima para unos 20 mochileros en una cabaña de madera. Hoy reúne a más de 30.000 personas cada luna llena.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 8 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">08</div>
+          <div class="day-title">Ruta a Krabi</div>
+          <div class="day-date">Jueves 30 de julio</div>
+          <a href="https://www.airbnb.es/rooms/732343367151409554" target="_blank" class="hotel-pill-badge">🏡 Villa Privada Ao Nang</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">☀️ 30°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🚗 Viaje Largo (~8h)</span>
+              <span class="sticker teal">🚢 Ferry 11:30h</span>
+              <span class="sticker coral">Noche 1/4 Krabi</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li><strong>11:30h - 15:20h:</strong> Ferry de salida de Koh Phangan de vuelta a Surat Thani (incluye la van de enlace directa, pagado en 21,60€ pp).</li>
+              <li><strong>16:30h:</strong> Retiramos los coches de alquiler grupales en las oficinas del aeropuerto (1 Van de 11 plazas + 1 coche MPV por 55,54€ pp).</li>
+              <li>Ruta por carretera cruzando el país hacia la costa oeste hasta nuestra súper <strong>Villa Privada en Ao Nang</strong> con piscina propia.</li>
+              <li>Paseo relajado al atardecer por Ao Nang Beach, caminata corta por el Monkey Trail y cena en el mercado nocturno.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Ao Nang Night Market:</strong> Un mercado al aire libre espectacular al lado de la costa. Eliges el marisco o pescado fresco que quieras del hielo y te lo hacen a la brasa en el momento.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Ao+Nang+Night+Market+Krabi" target="_blank" class="maps-redirect-btn">Ver Mercado en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Música o playlists descargadas offline en el móvil y un cable auxiliar para los coches. Nos toca un viaje largo cruzando el país de costa a costa.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de Ao Nang</h5>
+              <p>Los macacos salvajes que habitan el tramo del Monkey Trail de Ao Nang son ladrones expertos. Si ven mochilas abiertas, comida o gafas de sol, bajarán a quitártelas en segundos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 9 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div id="chunk-krb" style="position:absolute; top:-100px;"></div>
+          <div class="day-num">09</div>
+          <div class="day-title">Islas Phi Phi</div>
+          <div class="day-date">Viernes 31 de julio</div>
+          <a href="https://www.airbnb.es/rooms/732343367151409554" target="_blank" class="hotel-pill-badge">🏡 Villa Privada Ao Nang</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🌊 30°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🚤 Lancha Rápida</span>
+              <span class="sticker teal">🤿 Snorkel Libre</span>
+              <span class="sticker coral">Noche 2/4 Krabi</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Alquilamos una lancha rápida privada directamente con capitanes locales en el puerto (sale mucho más barato que reservando online).</li>
+              <li>Navegaremos por la espectacular laguna turquesa de <strong>Pileh Bay</strong> rodeada de muros de piedra caliza de 100 metros.</li>
+              <li>Pasaremos por Viking Cave, Monkey Bay y haremos snorkel rodeados de peces en Nui Bay, Bamboo Island, Chicken Island y Koh Poda.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Kodam Kitchen (Ao Nang):</strong> Un sitio escondido súper chulo rodeado de plantas de bambú. Tienen el mejor curry massaman casero de la zona y platos tradicionales brutales.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Kodam+Kitchen+Ao+Nang+Krabi" target="_blank" class="maps-redirect-btn">Ver Kodam en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Alerta de Conservación</h4>
+            <p><strong>Maya Bay:</strong> Veremos e inmortalizaremos la mítica playa desde el barco, ya que cierra por completo en agosto para proteger los tiburones de arrecife y el ecosistema coralino.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de la cueva</h5>
+              <p>Viking Cave le debe su nombre a unas misteriosas e icónicas pinturas rupestres prehistóricas en sus paredes que representan barcos drakkars nórdicos antiguos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 10 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1560088856-74fc21c97eb7?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">10</div>
+          <div class="day-title" style="font-size:1.15rem;">Aventura en Krabi I</div>
+          <div class="day-date">Sábado 1 de agosto</div>
+          <a href="https://www.airbnb.es/rooms/732343367151409554" target="_blank" class="hotel-pill-badge">🏡 Villa Privada Ao Nang</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">☀️ 30°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🧗 Templo del Tigre</span>
+              <span class="sticker teal">💧 Emerald Pool</span>
+              <span class="sticker coral">Noche 3/4 Krabi</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Dos días libres para movernos en coche y decidir los planes sobre la marcha según las fuerzas del grupo.</li>
+              <li><strong>Templo del Tigre (Wat Tham Suea):</strong> Subida legendaria de 1.260 escalones verticales de piedra para tocar el cielo y ver las mejores vistas de la provincia.</li>
+              <li><strong>Emerald Pool:</strong> Una espectacular piscina de agua termal natural metida en medio de la selva espesa con un color verde cristalino mágico.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>Lae Lay Grill (Ao Nang):</strong> Un restaurante de mariscos espectacular situado en lo alto de la ladera, ideal para una buena cena de grupo viendo el atardecer sobre la bahía.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=Lae+Lay+Grill+Ao+Nang+Krabi" target="_blank" class="maps-redirect-btn">Ver Lae Lay en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Zapatillas de deporte con buen agarre para la dura subida de escaleras del templo (prohibido chanclas) y repelente de mosquitos fuerte para la selva de la Emerald Pool.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de la subida</h5>
+              <p>Los peldaños que ascienden al Templo del Tigre no guardan proporciones normales: algunos miden más de 30 cm de alto, equivaliendo a subir un rascacielos de 90 pisos bajo el calor tropical.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 11 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1560088856-74fc21c97eb7?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">11</div>
+          <div class="day-title" style="font-size:1.15rem;">Aventura en Krabi II</div>
+          <div class="day-date">Domingo 2 de agosto</div>
+          <a href="https://www.airbnb.es/rooms/732343367151409554" target="_blank" class="hotel-pill-badge">🏡 Villa Privada Ao Nang</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">☀️ 30°C</span>
+            <div class="sticker-container">
+              <span class="sticker teal">🚣 Kayak Manglares</span>
+              <span class="sticker orange">🐘 Santuario Elefantes</span>
+              <span class="sticker coral">Noche 4/4 Krabi</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Último día en la costa oeste para hacer actividades de aventura o quedarnos en la piscina de relax total.</li>
+              <li>Opciones top disponibles: Hacer rutas en kayak por los manglares marinos de Ao Thalane o visitar un santuario ético certificado de elefantes rescatados.</li>
+              <li>También podéis coger un bote de cola larga tradicional en la playa para pasar la tarde entre los acantilados de Railay Beach.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde cenar</h4>
+            <p><strong>The Grotto (Rayavadee):</strong> Situado en Railay, es un restaurante espectacular y exclusivo metido literalmente dentro de una antigua cueva caliza abierta directamente a la playa de arena blanca.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=The+Grotto+Rayavadee+Krabi" target="_blank" class="maps-redirect-btn">Ver The Grotto en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Bañador, toalla ligera y una muda de ropa seca completa en la mochila por si visitamos el kayak de manglares o nos bañamos con los elefantes en el río.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de los elefantes</h5>
+              <p>Los elefantes asiáticos pasan cerca de 16 horas al día únicamente alimentándose de hojas y cortezas, llegando a consumir cerca del 10% de su peso corporal cada día.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 12 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1542856391-010fb87dcfed?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">12</div>
+          <div class="day-title">Últimas Compras</div>
+          <div class="day-date">Lunes 3 de agosto</div>
+          <a href="https://www.pascherhoteldebangkok.com/" target="_blank" class="hotel-pill-badge">🏨 Pas Cher Hotel</a>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🏙️ 33°C</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🛫 Vuelo Doméstico</span>
+              <span class="sticker teal">🛍️ MBK Center</span>
+              <span class="sticker coral">Noche 1/1 Pas Cher</span>
+            </div>
+            <h4>📍 Plan del día</h4>
+            <ul class="clean-bullets">
+              <li>Madrugón para devolver los coches de alquiler grupales en el aeropuerto de Krabi antes de las <strong>07:00h</strong> de la mañana.</li>
+              <li><strong>09:25h - 11:00h:</strong> Volamos de regreso a Bangkok con Bangkok Airways (vuelo cerrado y pagado: 49,55€ pp).</li>
+              <li>Check-in en las 4 habitaciones triples de nuestro céntrico hotel <strong>Pas Cher Hotel de Bangkok</strong>.</li>
+              <li><strong>Tarde de compras:</strong> Asalto masivo al inmenso centro comercial <strong>MBK Center</strong> para comprar los últimos recuerdos, souvenirs e imitaciones regateando en sus pasillos.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Dónde almorzar</h4>
+            <p><strong>MBK Food Island (Planta 6):</strong> Un patio de puestos de comida tradicional inmenso y súper local que funciona mediante tarjetas de cupones prepago muy baratas. Ideal para comer rápido entre tiendas.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=MBK+Food+Island+Bangkok" target="_blank" class="maps-redirect-btn">Ver MBK en Maps →</a>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Dejar un buen espacio libre en la mochila o maleta grande para poder meter todas las compras, imitaciones de ropa y recuerdos que os llevéis del centro comercial.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad del centro comercial</h5>
+              <p>El MBK Center cuenta con 8 plantas enteras y aloja más de 2.000 comercios independientes. En el momento de su inauguración en 1985 era el centro comercial más grande de toda Asia.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIA 13 -->
+      <div class="day-layout reveal" data-bg="https://images.unsplash.com/photo-1530521954074-e64f6810b32d?w=1200&q=80">
+        <div class="day-timeline-node"></div>
+        <div class="day-sticky-panel">
+          <div class="day-num">13</div>
+          <div class="day-title">Vuelta a Casa</div>
+          <div class="day-date">Martes 4 de agosto</div>
+        </div>
+        <div class="day-info-grid">
+          <div class="info-card full-width">
+            <span class="weather-tag">🇪🇸</span>
+            <div class="sticker-container">
+              <span class="sticker orange">🛫 Regreso 01:50h</span>
+              <span class="sticker coral">Fin del Viaje</span>
+            </div>
+            <h4>📍 Fin del viaje</h4>
+            <ul class="clean-bullets">
+              <li><strong>01:50h:</strong> Despega nuestro vuelo internacional nocturno directo desde Bangkok de regreso a Madrid (vuelo cerrado en 650€ pp).</li>
+              <li><strong>13:45h:</strong> Aterrizamos en España el mismo martes a mediodía con las mochilas cargadas de recuerdos e historias legendarias del grupo de amigos. Fin de la aventura.</li>
+            </ul>
+          </div>
+          <div class="info-card food-card">
+            <h4>🍜 Comida a bordo</h4>
+            <p><strong>Catering de Vuelo:</strong> Menús calientes de desayuno y almuerzo servidos a bordo de la cabina antes del aterrizaje en espacio aéreo español.</p>
+          </div>
+          <div class="info-card imprescindible-card">
+            <h4>🎒 Imprescindible hoy</h4>
+            <p>Revisar a fondo no dejarse ningún cargador enchufado en las habitaciones del hotel y llevar el pasaporte original a mano para los controles de aduanas de salida.</p>
+          </div>
+          <div class="info-card fun-fact">
+            <div class="secret-highlight-box">
+              <h5>💡 Curiosidad de la terminal</h5>
+              <p>El Aeropuerto de Bangkok-Suvarnabhumi cuenta con una de las torres de control de tráfico aéreo independientes más elevadas del mundo, alzándose de manera imponente hasta los 132 metros.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="logistica">
+  <div class="container grid-2">
+    
+    <div class="luxury-box reveal">
+      <div class="section-meta" style="text-align: left; margin-bottom: 2rem;">
+        <h2>Presupuesto Cerrado</h2>
+        <p style="text-align: left;">Gastos fijos calculados oficialmente por persona</p>
+      </div>
+      <div class="b-row"><span>Vuelos Madrid - Bangkok (Ya pagados)</span><span class="amt">650,00 €</span></div>
+      <div class="b-row"><span>Vuelo BKK - Surat Thani (Air Asia)</span><span class="amt">46,70 €</span></div>
+      <div class="b-row"><span>Vuelo Krabi - BKK (Bangkok Airways)</span><span class="amt">49,55 €</span></div>
+      <div class="b-row"><span>Pack Vans BKK + Tickets Mercado Flotante</span><span class="amt">44,00 €</span></div>
+      <div class="b-row"><span>Ferry + Van Enlace 1 (Surat Thani - KPH)</span><span class="amt">27,73 €</span></div>
+      <div class="b-row"><span>Ferry + Van Enlace 2 (KPH - Aeropuerto)</span><span class="amt">21,60 €</span></div>
+      <div class="b-row"><span>Coches de Alquiler (Van 11p + MPV 5p)</span><span class="amt">55,54 €</span></div>
+      <div class="b-row"><span>Alojamientos Combinados (11 Noches Totales)</span><span class="amt">295,00 €</span></div>
+      
+      <div class="b-total"><span>Gasto Base Fijo Neto</span><span class="amt">1.190,12 €</span></div>
+      
+      <div class="b-alert" style="background: rgba(42, 157, 143, 0.08); border-color: rgba(42, 157, 143, 0.2); color: #16645a;">
+        <strong>💸 YA LLEVAMOS PAGADO CADA UNO: 941,42 €</strong><br>
+        <span style="font-size: 0.78rem; opacity: 0.9; display: block; margin-top: 0.2rem;">
+          (Vuelo internacional 650€ + vuelos internos 96,25€ + ferrys 49,34€ + adelanto villa 100€ + adelanto coche 41,43€ + reserva bkk 4,40€).
+        </span>
+      </div>
+
+      <div class="b-alert">
+        <strong>📊 TOTAL ESTIMADO VIAJE COMPLETO: ~1.380,00 €</strong><br>
+        <span style="font-size: 0.78rem; opacity: 0.9; display: block; margin-top: 0.2rem;">
+          Incluye: Base fija + Seguro Hey Mondo (60,31€) + Previsión extra de excursiones locales (Phi Phi, Ang Thong... aprox 80€) + Retención de fianza del coche (~50€ pp reembolsables).
+        </span>
+      </div>
+    </div>
+
+    <div class="luxury-box reveal" style="transition-delay: 0.1s;">
+      <div class="section-meta" style="text-align: left; margin-bottom: 2rem;">
+        <h2>Consejos Clave</h2>
+        <p style="text-align: left;">Notas de supervivencia indispensables</p>
+      </div>
+      <ul class="tip-stack">
+        <li>
+          <strong>Pasaporte y Vigencia</strong>
+          <p>Revisa obligatoriamente que a tu pasaporte original le queten más de 6 meses de validez el día de entrada a Tailandia para evitar problemas en el control de embarque.</p>
+        </li>
+        <li>
+          <strong>El Repelente de Mosquitos</strong>
+          <p>No lo compres en España, las fórmulas europeas no les hacen nada a los mosquitos de allí. Al aterrizar, entramos a cualquier 7-Eleven y compramos el spray local <strong>"Sketolene"</strong> (bote naranja o verde). Vale poquísimo y funciona perfecto.</p>
+        </li>
+        <li>
+          <strong>Crema Solar</strong>
+          <p>Llévala comprada desde España. En Tailandia la crema es un artículo caro de importación y en las playas te cobrarán muchísimo dinero por botes pequeños.</p>
+        </li>
+        <li>
+          <strong>Fianza del Coche</strong>
+          <p>Hay una fianza con tarjeta de unos 500€ - 600€ en total (~50€ por persona) al recoger los vehículos que se devolverá íntegra al terminar el alquiler sin daños.</p>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  Tailandia 2026 · El verano más épico de nuestras vidas · Creado para el grupo de amigos definitivo.
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// --- 1. MAPA OSCURO INTERACTIVO ---
+const map = L.map('map', { scrollWheelZoom: false }).setView([11.2, 99.5], 6);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+const points = {
+  bkk: [13.7563, 100.5018],
+  surat: [9.1333, 99.3167],
+  phangan: [9.7333, 100.0167],
+  krabi: [8.0833, 98.9167]
+};
+
+const pulseMarkerIcon = L.divIcon({
+  className: 'custom-glow-node',
+  html: '<div style="width:12px; height:12px; background:#2A9D8F; border-radius:50%; box-shadow:0 0 15px #4EFCDE; border:1px solid #fff"></div>',
+  iconSize: [12, 12]
+});
+
+L.marker(points.bkk, {icon: pulseMarkerIcon}).addTo(map).bindPopup('<b>Bangkok Hub</b><br>Noches: 2-4 y 12');
+L.marker(points.phangan, {icon: pulseMarkerIcon}).addTo(map).bindPopup('<b>Koh Phangan Resort</b><br>Noches: 5-7');
+L.marker(points.krabi, {icon: pulseMarkerIcon}).addTo(map).bindPopup('<b>Krabi Ao Nang</b><br>Villa Privada con Piscina<br>Noches: 8-11');
+
+L.polyline([points.bkk, points.surat, points.phangan], {color: '#E76F51', weight: 2.5, opacity: 0.85}).addTo(map);
+L.polyline([points.phangan, points.surat, points.krabi], {color: '#2A9D8F', weight: 2.5, dashArray: '4, 4'}).addTo(map);
+L.polyline([points.krabi, points.bkk], {color: '#F4A261', weight: 2.5, opacity: 0.85}).addTo(map);
+
+map.fitBounds([points.bkk, points.krabi], {padding: [60, 60]});
+
+
+// --- 2. CAMBIO DINÁMICO DE FONDO & TRACKER LINEAL ---
+const backgroundCanvas = document.getElementById('dynamic-story-bg');
+const dayElements = document.querySelectorAll('.day-layout');
+const progressBar = document.getElementById('progress-bar');
+
+backgroundCanvas.style.backgroundImage = "url('https://images.unsplash.com/photo-1528181304800-259b08848526?w=1400&q=80')";
+
+const storytellingObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const targetedBgUrl = entry.target.getAttribute('data-bg');
+      if (targetedBgUrl) {
+        backgroundCanvas.style.backgroundImage = `url('${targetedBgUrl}')`;
+      }
+      entry.target.classList.add('active-day');
+    } else {
+      entry.target.classList.remove('active-day');
+    }
+  });
+}, { threshold: 0.25, rootMargin: "0px" });
+
+dayElements.forEach(card => storytellingObserver.observe(card));
+
+window.addEventListener('scroll', () => {
+  if (window.scrollY < 200) {
+    backgroundCanvas.style.backgroundImage = "url('https://images.unsplash.com/photo-1528181304800-259b08848526?w=1400&q=80')";
+  }
+  
+  const itinSec = document.getElementById('itinerario');
+  const rect = itinSec.getBoundingClientRect();
+  const totalHeight = itinSec.clientHeight;
+  const scrolledDistance = -rect.top;
+  let pct = (scrolledDistance / totalHeight) * 100;
+  if(pct < 0) pct = 0;
+  if(pct > 100) pct = 100;
+  progressBar.style.height = pct + '%';
+});
+
+
+// --- 3. ANIMACIONES REVEAL SCROLL ---
+const animatedNodes = document.querySelectorAll('.reveal');
+const elementVisibilityObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('active');
+      elementVisibilityObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+animatedNodes.forEach(node => elementVisibilityObserver.observe(node));
+
+
+// --- 4. REVOLUCIONES DE LA CUENTA ATRÁS ---
+const targetedCountdownTime = new Date("Jul 23, 2026 16:40:00").getTime();
+const runClock = setInterval(() => {
+  const currentInstant = new Date().getTime();
+  const timeRemaining = targetedCountdownTime - currentInstant;
+  
+  if (timeRemaining <= 0) {
+    clearInterval(runClock);
+    return;
+  }
+  
+  document.getElementById("dias").innerHTML = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+  document.getElementById("horas").innerHTML = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+  document.getElementById("mins").innerHTML = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+  document.getElementById("segs").innerHTML = Math.floor((timeRemaining % (1000 * 60)) / 1000).toString().padStart(2, '0');
+}, 1000);
+</script>
+</body>
+</html>
